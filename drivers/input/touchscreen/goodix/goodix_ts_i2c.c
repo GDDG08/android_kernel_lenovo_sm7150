@@ -89,9 +89,11 @@ static int goodix_parse_dt_resolution(struct device_node *node,
 	if (r)
 		err = -ENOENT;
 
-	board_data->swap_axis = of_property_read_bool(node,
-					"goodix,swap-axis");
-	board_data->x2x = of_property_read_bool(node, "goodix,x2x");
+	// board_data->swap_axis = of_property_read_bool(node,
+	// 				"goodix,swap-axis");
+	// board_data->x2x = of_property_read_bool(node, "goodix,x2x");
+	board_data->swap_axis = 1u;
+	board_data->x2x = 1u;
 	board_data->y2y = of_property_read_bool(node, "goodix,y2y");
 
 	return 0;
@@ -1312,13 +1314,16 @@ static void goodix_parse_pen(struct goodix_ts_device *dev,
 	}
 
 	/*pen data */
+	struct goodix_ts_board_data *bdata = &dev->board_data;
+
 	coor_data = &buf[IRQ_HEAD_LEN + BYTES_PER_COORD *(touch_num -1)];
 	id = coor_data[0] & 0x80;
-	pen_data->coords.x = le16_to_cpup((__be16 *)(coor_data + 1));
-	pen_data->coords.y = le16_to_cpup((__be16 *)(coor_data + 3));
+	pen_data->coords.y = le16_to_cpup((__be16 *)(coor_data + 1));
+	pen_data->coords.x = bdata->panel_max_x - le16_to_cpup((__be16 *)(coor_data + 3));
 	pen_data->coords.p = le16_to_cpup((__be16 *)(coor_data + 5));
-	x_angle = le16_to_cpup((__le16 *)&coor_data[7]);
-	y_angle = le16_to_cpup((__le16 *)&coor_data[9]);
+
+	y_angle = le16_to_cpup((__le16 *)&coor_data[7]);
+	x_angle = le16_to_cpup((__le16 *)&coor_data[9]);
 	pen_data->coords.tilt_x = x_angle/100;
 	pen_data->coords.tilt_y = y_angle/100;
 	/* currently only support one stylus */
